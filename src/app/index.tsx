@@ -1,98 +1,63 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Button, Text, TextInput, View } from 'react-native';
+import { getProfile, saveProfile } from '../lib/storage';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function Onboarding() {
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+  useEffect(() => {
+    let mounted = true;
+    getProfile()
+      .then((profile) => {
+        if (!mounted) return;
+        if (profile?.onboarded) {
+          router.replace('/alarms');
+          return;
+        }
+        setLoading(false);
+      })
+      .catch((reason: unknown) => {
+        if (!mounted) return;
+        setError(reason instanceof Error ? reason.message : 'Could not load your profile.');
+        setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  const handleContinue = async () => {
+    setError('');
+    try {
+      await saveProfile({ name, onboarded: true });
+      router.replace('/alarms');
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : 'Could not save your profile.');
+    }
+  };
+
+  if (loading) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator />
+        <Text style={{ marginTop: 12 }}>Loading your profile…</Text>
+      </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>
+      <Text style={{ fontSize: 22, marginBottom: 16 }}>What's your name?</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder="Enter your name"
+        style={{ borderWidth: 1, padding: 12, borderRadius: 8, marginBottom: 16 }}
+      />
+      {!!error && <Text style={{ color: '#b42318', marginBottom: 12 }}>{error}</Text>}
+      <Button title="Continue" onPress={handleContinue} disabled={!name} />
+    </View>
   );
+
 }
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
