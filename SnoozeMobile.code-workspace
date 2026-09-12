@@ -1,0 +1,4 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": { "editor.tabSize": 2, "files.exclude": { "node_modules": true, ".expo": true } }
+}

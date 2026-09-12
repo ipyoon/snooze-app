@@ -1,0 +1,7 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Snooze: Install dependencies (first time)", "type": "shell", "command": "npm install", "problemMatcher": [] },
+    { "label": "Snooze: Start phone preview", "type": "shell", "command": "npx expo start --clear", "isBackground": true, "problemMatcher": [], "presentation": { "reveal": "always", "panel": "dedicated" } }
+  ]
+}

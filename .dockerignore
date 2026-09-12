@@ -1,0 +1,9 @@
+node_modules
+.git
+.expo
+.env
+**/.env
+**/.env.*
+!server/.env.example
+outputs
+work

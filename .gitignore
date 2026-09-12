@@ -36,8 +36,18 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-example
-
 # generated native folders
 /ios
 /android
+
+# Server secrets; examples can be committed.
+server/.env
+server/.env.*
+!server/.env.example
+
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+
+node_modules
